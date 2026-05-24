@@ -5,10 +5,7 @@ services:
     restart: unless-stopped
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: nexo_user
-      POSTGRES_PASSWORD: nexo_pass
-      POSTGRES_DB: nexo_emprendedor
+    env_file: .env.docker
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
