@@ -8,10 +8,14 @@
     "build": "pnpm --filter=web build",
     "start": "pnpm --filter=web start",
     "lint": "pnpm --filter=web lint",
-    "db:migrate": "pnpm --filter=web prisma migrate dev",
-    "db:push": "pnpm --filter=web prisma db push",
-    "db:studio": "pnpm --filter=web prisma studio",
-    "db:seed": "pnpm --filter=web prisma db seed",
+    "db:migrate": "pnpm --filter=database db:migrate",
+    "db:push": "pnpm --filter=database db:push",
+    "db:studio": "pnpm --filter=database db:studio",
+    "db:seed": "pnpm --filter=database db:seed",
+    "db:generate": "pnpm --filter=database db:generate",
+    "docker:up": "docker compose --env-file .env.docker up -d",
+    "docker:down": "docker compose down",
+    "setup": "cp -n .env.docker.example .env.docker 2>/dev/null; cp -n .env.example .env 2>/dev/null; cp -n apps/web/.env.example apps/web/.env 2>/dev/null; pnpm install && pnpm db:migrate && pnpm db:seed",
     "create:tenant": "node scripts/create-tenant.js"
   },
   "engines": {

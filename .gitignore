@@ -2,9 +2,15 @@ node_modules/
 .next/
 .env
 .env.local
+.env.docker
+.env.production
 dist/
 build/
 *.log
 .DS_Store
 *.tsbuildinfo
 .prisma/
+
+# Allow example env files
+!.env.example
+!.env.docker.example
