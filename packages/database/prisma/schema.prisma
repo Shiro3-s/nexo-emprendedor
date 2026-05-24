@@ -1,0 +1,494 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["public", "tenants"]
+}
+
+// ============================================================
+// SCHEMA PUBLIC — Compartido entre todos los tenants
+// ============================================================
+
+model Tenant {
+  id             String       @id @default(cuid())
+  name           String
+  slug           String       @unique
+  domain         String       @unique
+  emailDomain    String
+  schemaName     String       @unique
+  logo           String?
+  primaryColor   String       @default("#0057a4")
+  secondaryColor String       @default("#ffc400")
+  isActive       Boolean      @default(true)
+  config         Json?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  users          TenantUser[]
+
+  @@schema("public")
+}
+
+model TenantUser {
+  id       String @id @default(cuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+  email    String
+  role     String // "super_admin", "admin"
+  @@unique([tenantId, email])
+  @@schema("public")
+}
+
+// ============================================================
+// SCHEMA TENANTS — Template para los schemas de cada tenant
+// ============================================================
+
+enum Gender {
+  MASCULINO
+  FEMENINO
+  OTRO
+
+  @@schema("tenants")
+}
+
+enum ValidationStage {
+  PENDING_PROFILE
+  PROFILE_COMPLETED
+  ADVISORY_MEETING
+  DIAGNOSTICS_ACCESS
+  DIAGNOSTICS_DONE
+  LETTER_ACCESS
+  LETTER_UPLOADED
+  FULLY_VALIDATED
+  REJECTED
+
+  @@schema("tenants")
+}
+
+enum AdvisoryStatus {
+  PENDING
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+
+  @@schema("tenants")
+}
+
+enum AdvisoryModality {
+  PRESENCIAL
+  VIRTUAL
+  MIXTA
+
+  @@schema("tenants")
+}
+
+enum EntrepreneurshipStage {
+  IDEACION
+  PROTOTIPADO
+  VALIDACION
+  LANZAMIENTO
+
+  @@schema("tenants")
+}
+
+// Catálogos configurables por tenant
+
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  users       User[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model AcademicProgram {
+  id        String   @id @default(cuid())
+  name      String
+  code      String?
+  isActive  Boolean  @default(true)
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model UniversityCenter {
+  id        String   @id @default(cuid())
+  name      String
+  code      String?
+  location  String?
+  isActive  Boolean  @default(true)
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model CivilStatus {
+  id        String   @id @default(cuid())
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+// Usuarios
+
+model User {
+  id              String          @id @default(cuid())
+  email           String          @unique
+  name            String
+  passwordHash    String?
+  image           String?
+
+  documentType    String?
+  documentNumber  String?
+  phone           String?
+  address         String?
+  birthDate       DateTime?
+  gender          Gender?
+  maritalStatus   String?
+  semester        String?
+  modality        String?
+
+  roleId          String
+  role            Role            @relation(fields: [roleId], references: [id])
+  academicProgramId String?
+  academicProgram AcademicProgram? @relation(fields: [academicProgramId], references: [id])
+  universityCenterId String?
+  universityCenter UniversityCenter? @relation(fields: [universityCenterId], references: [id])
+
+  validationStage ValidationStage @default(PENDING_PROFILE)
+
+  createdBy       String?
+  updatedBy       String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  entrepreneurship  Entrepreneurship?
+  advisoryRequests  AdvisoryRequest[]
+  notifications     Notification[]
+  validationLogs    ValidationLog[]
+  auditLogs         AuditLog[]
+  diagnosticResponses DiagnosticResponse[]
+  diagnosticScores    DiagnosticScore[]
+  generatedDocuments  GeneratedDocument[]
+
+  @@schema("tenants")
+}
+
+// Emprendimiento
+
+model Entrepreneurship {
+  id              String               @id @default(cuid())
+  name            String
+  description     String?
+  stage           EntrepreneurshipStage @default(IDEACION)
+  economicSector  String?
+  businessModel   String?
+  startDate       DateTime?
+  isActive        Boolean              @default(true)
+
+  commitmentLetter  String?
+  commitmentLetterUploadedAt DateTime?
+
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id])
+  advisor       AdvisorAssignment?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model AdvisorAssignment {
+  id                String   @id @default(cuid())
+  entrepreneurshipId String  @unique
+  entrepreneurship  Entrepreneurship @relation(fields: [entrepreneurshipId], references: [id])
+  advisorId         String
+  assignedById      String
+  assignedAt        DateTime @default(now())
+  isActive          Boolean  @default(true)
+
+  @@schema("tenants")
+}
+
+// Diagnóstico dinámico
+
+model DiagnosticTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+
+  // Config global de scoring
+  scoringValues   Json?  // {"Si": 100, "No": 0, "Parcialmente": 50}
+  scoringLevels   Json?  // [{"min":0,"max":33,"label":"Bajo","color":"red"}, ...]
+
+  sections        DiagnosticSection[]
+  dimensions      DiagnosticDimension[]
+  dashboardWidgets DashboardWidget[]
+  generatedDocuments GeneratedDocument[]
+  scores          DiagnosticScore[]
+  responses       DiagnosticResponse[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model DiagnosticSection {
+  id          String   @id @default(cuid())
+  templateId  String
+  template    DiagnosticTemplate @relation(fields: [templateId], references: [id])
+  title       String
+  description String?
+  order       Int
+  isActive    Boolean  @default(true)
+  questions   DiagnosticQuestion[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model DiagnosticQuestion {
+  id        String   @id @default(cuid())
+  sectionId String
+  section   DiagnosticSection @relation(fields: [sectionId], references: [id])
+  question  String
+  type      String            // text, textarea, number, select, radio, checkbox, date
+  options   Json?
+  required  Boolean  @default(true)
+  order     Int
+  isActive  Boolean  @default(true)
+
+  // Para preguntas que mapean a campos del perfil (ej: "name", "documentNumber")
+  mapsTo    String?
+
+  responses DiagnosticResponse[]
+  scoringRules ScoringRule[]
+
+  createdAt DateTime @default(now())
+
+  @@schema("tenants")
+}
+
+// Dimensión a medir (ej: "Modelo de Negocio", "Finanzas")
+model DiagnosticDimension {
+  id         String   @id @default(cuid())
+  templateId String
+  template   DiagnosticTemplate @relation(fields: [templateId], references: [id])
+  name       String
+  color      String
+  order      Int
+  scoringRules ScoringRule[]
+  scores     DiagnosticScore[]
+  createdAt  DateTime @default(now())
+
+  @@schema("tenants")
+}
+
+// Regla: qué preguntas componen cada dimensión y con qué peso
+model ScoringRule {
+  id          String   @id @default(cuid())
+  dimensionId String
+  dimension   DiagnosticDimension @relation(fields: [dimensionId], references: [id])
+  questionId  String
+  question    DiagnosticQuestion @relation(fields: [questionId], references: [id])
+  weight      Float    @default(1.0)
+  createdAt   DateTime @default(now())
+
+  @@unique([dimensionId, questionId])
+  @@schema("tenants")
+}
+
+// Score calculado por emprendedor en cada dimensión
+model DiagnosticScore {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  dimensionId String
+  dimension   DiagnosticDimension @relation(fields: [dimensionId], references: [id])
+  templateId  String
+  template    DiagnosticTemplate @relation(fields: [templateId], references: [id])
+  rawScore    Float
+  maxScore    Float
+  percentage  Float
+  level       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, dimensionId, templateId])
+  @@schema("tenants")
+}
+
+// Respuesta a pregunta del diagnóstico
+model DiagnosticResponse {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  questionId String
+  question   DiagnosticQuestion @relation(fields: [questionId], references: [id])
+  templateId String
+  template   DiagnosticTemplate @relation(fields: [templateId], references: [id])
+  value      Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([userId, questionId])
+  @@schema("tenants")
+}
+
+// Widget de dashboard configurable por template
+model DashboardWidget {
+  id          String   @id @default(cuid())
+  templateId  String
+  template    DiagnosticTemplate @relation(fields: [templateId], references: [id])
+  type        String   // "radar", "bar", "gauge", "scorecard"
+  title       String?
+  dimensionIds Json    // IDs de dimensiones a graficar
+  config      Json?
+  placement   String   // "overview", "diagnostics", "entrepreneurship"
+  order       Int
+  createdAt   DateTime @default(now())
+
+  @@schema("tenants")
+}
+
+// Documento generado automáticamente (PDF)
+model GeneratedDocument {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  type       String   // "CHARACTERIZATION", "ASSESSMENT", "COMMITMENT_LETTER"
+  templateId String?
+  template   DiagnosticTemplate? @relation(fields: [templateId], references: [id])
+  url        String
+  createdAt  DateTime @default(now())
+
+  @@schema("tenants")
+}
+
+// Asesorías
+
+model AdvisoryRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  reason      String
+  status      AdvisoryStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  advisories  Advisory[]
+
+  @@schema("tenants")
+}
+
+model Advisory {
+  id            String    @id @default(cuid())
+  requestId     String
+  request       AdvisoryRequest @relation(fields: [requestId], references: [id])
+  advisorId     String
+  modality      AdvisoryModality
+  scheduledDate DateTime?
+  location      String?
+  virtualLink   String?
+  comments      String?
+  status        AdvisoryStatus @default(SCHEDULED)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@schema("tenants")
+}
+
+// Validación
+
+model ValidationLog {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  fromStage ValidationStage
+  toStage   ValidationStage
+  changedBy String
+  comment   String?
+  createdAt DateTime        @default(now())
+
+  @@schema("tenants")
+}
+
+// Auditoría
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  oldValue  Json?
+  newValue  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@schema("tenants")
+}
+
+// Notificaciones
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  message   String
+  type      String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@schema("tenants")
+}
+
+// Eventos
+
+model Event {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  type         String
+  modality     AdvisoryModality
+  location     String?
+  virtualLink  String?
+  startDate    DateTime
+  endDate      DateTime
+  maxAttendees Int?
+  isActive     Boolean  @default(true)
+  attendees    EventAttendee[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@schema("tenants")
+}
+
+model EventAttendee {
+  id      String @id @default(cuid())
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id])
+  userId  String
+  status  String
+  @@unique([eventId, userId])
+
+  @@schema("tenants")
+}
