@@ -48,6 +48,20 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 | POST | `/api/admin/validate/reject` | Rechazar en cualquier etapa |
 | GET | `/api/admin/validate/logs` | Historial de validaciones |
 
+### Diagnósticos (gestión admin)
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/admin/diagnostics` | Listar diagnósticos completados |
+| GET | `/api/admin/diagnostics/templates` | Listar plantillas de diagnóstico del tenant |
+| POST | `/api/admin/diagnostics/templates` | Crear plantilla de diagnóstico |
+| PUT | `/api/admin/diagnostics/templates/[id]` | Actualizar plantilla |
+| GET | `/api/admin/diagnostics/[userId]` | Ver respuestas + scores de un usuario |
+| POST | `/api/admin/diagnostics/[userId]/verify` | Verificar diagnóstico |
+| GET | `/api/admin/diagnostics/[userId]/scores` | Scores calculados por dimensión |
+| GET | `/api/admin/diagnostics/[userId]/dashboard` | Datos del dashboard (gráficos) |
+| GET | `/api/admin/diagnostics/[userId]/documents` | PDFs generados |
+
 ### Asesorías (gestión admin)
 
 | Método | Ruta | Descripción |
@@ -65,14 +79,6 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 | PUT | `/api/admin/entrepreneurships/[id]` | Actualizar |
 | DELETE | `/api/admin/entrepreneurships/[id]` | Eliminar |
 
-### Diagnósticos
-
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/admin/diagnostics` | Listar diagnósticos completados |
-| GET | `/api/admin/diagnostics/[userId]` | Ver respuestas de un usuario |
-| POST | `/api/admin/diagnostics/[userId]/verify` | Verificar diagnóstico |
-
 ### Cartas de Compromiso
 
 | Método | Ruta | Descripción |
@@ -87,6 +93,7 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 |--------|------|-------------|
 | POST | `/api/admin/export/csv` | Exportar datos a CSV |
 | POST | `/api/admin/export/pdf` | Exportar datos a PDF |
+| POST | `/api/admin/export/diagnostic-report/[userId]` | Exportar reporte de diagnóstico (scoring + gráficos) |
 | GET | `/api/admin/export/reportes` | Listar reportes disponibles |
 
 **Body (POST):**
@@ -111,7 +118,7 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 |--------|------|-------------|
 | POST | `/api/admin/upload-csv/users` | Cargar usuarios desde CSV |
 | POST | `/api/admin/upload-csv/entrepreneurships` | Cargar emprendimientos |
-| POST | `/api/admin/upload-csv/catalogs` | Cargar catálogos (programas, centros, etc.) |
+| POST | `/api/admin/upload-csv/catalogs` | Cargar catálogos |
 | GET | `/api/admin/upload-csv/templates` | Descargar plantillas CSV |
 
 ### Configuración
@@ -135,6 +142,7 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET | `/api/admin/stats` | Dashboard metrics |
+| GET | `/api/admin/stats/diagnostic-averages` | Promedios de diagnóstico por dimensión |
 | GET | `/api/admin/stats/entrepreneurships-by-stage` | Emprendimientos por etapa |
 | GET | `/api/admin/stats/advisories-by-month` | Asesorías por mes |
 | GET | `/api/admin/stats/validations` | Estado de validaciones |
@@ -153,6 +161,7 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 | POST | `/api/asesor/tracing` | Crear seguimiento |
 | GET | `/api/asesor/tracing/entrepreneurship/[id]` | Seguimientos de emprendimiento |
 | GET | `/api/asesor/stats` | Dashboard del asesor |
+| GET | `/api/asesor/diagnostics/[userId]/dashboard` | Ver dashboard de diagnóstico del emprendedor asignado |
 
 ---
 
@@ -171,18 +180,29 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | GET | `/api/emprendedor/entrepreneurship` | Mi emprendimiento |
-| POST | `/api/emprendedor/entrepreneurship` | Crear emprendimiento (si tiene acceso) |
+| POST | `/api/emprendedor/entrepreneurship` | Crear emprendimiento |
 | PUT | `/api/emprendedor/entrepreneurship` | Actualizar emprendimiento |
 
 ### Diagnóstico
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
+| GET | `/api/emprendedor/diagnostic/template` | Obtener template activo (secciones + preguntas) |
 | GET | `/api/emprendedor/diagnostic/sections` | Obtener secciones del formulario |
 | GET | `/api/emprendedor/diagnostic/questions/[sectionId]` | Preguntas de una sección |
 | PUT | `/api/emprendedor/diagnostic/response` | Guardar respuesta a pregunta |
-| POST | `/api/emprendedor/diagnostic/submit` | Marcar diagnóstico como completado |
+| POST | `/api/emprendedor/diagnostic/submit` | Marcar diagnóstico como completado (dispara scoring + PDFs) |
 | GET | `/api/emprendedor/diagnostic/progress` | Progreso del diagnóstico |
+| GET | `/api/emprendedor/diagnostic/results` | Scores calculados por dimensión |
+| GET | `/api/emprendedor/diagnostic/documents` | PDFs generados (caracterización + valoración) |
+
+### Dashboard
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/api/emprendedor/dashboard/overview` | Dashboard principal (score general + scorecards) |
+| GET | `/api/emprendedor/dashboard/diagnostics` | Gráficos de diagnóstico (radar + barras) |
+| GET | `/api/emprendedor/dashboard/evolution` | Evolución de scores en el tiempo (múltiples diagnósticos) |
 
 ### Carta de Compromiso
 
@@ -260,5 +280,30 @@ Gestionado por NextAuth.js. Ver [docs/05-AUTENTICACION.md](./05-AUTENTICACION.md
   "details": [
     { "field": "gender", "message": "Valor inválido" }
   ]
+}
+```
+
+### Dashboard (ejemplo)
+```json
+{
+  "success": true,
+  "data": {
+    "generalScore": 68,
+    "generalLevel": "Medio",
+    "dimensions": [
+      { "dimensionName": "MODELO DE NEGOCIO", "percentage": 75, "level": "Alto", "color": "#4F46E5" },
+      { "dimensionName": "MARKETING Y MERCADEO", "percentage": 50, "level": "Medio", "color": "#06B6D4" },
+      { "dimensionName": "PRODUCTO O SERVICIO", "percentage": 33, "level": "Bajo", "color": "#10B981" },
+      { "dimensionName": "ADMIN FINANCIERO Y LEGAL", "percentage": 67, "level": "Medio", "color": "#F59E0B" },
+      { "dimensionName": "INNOVACIÓN", "percentage": 100, "level": "Alto", "color": "#EF4444" },
+      { "dimensionName": "SOSTENIBILIDAD", "percentage": 83, "level": "Alto", "color": "#8B5CF6" }
+    ],
+    "widgets": [
+      { "type": "gauge", "title": "Score General", "placement": "overview" },
+      { "type": "scorecard", "title": null, "placement": "overview" },
+      { "type": "radar", "title": "Rendimiento por Dimensión", "placement": "diagnostics" },
+      { "type": "bar", "title": "Comparación por Dimensión", "placement": "diagnostics" }
+    ]
+  }
 }
 ```
