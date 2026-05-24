@@ -1,0 +1,21 @@
+{
+  "name": "nexo-emprendedor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nexo Emprendedor — Plataforma SaaS de Gestión de Emprendimientos multi-tenant",
+  "scripts": {
+    "dev": "pnpm --filter=web dev",
+    "build": "pnpm --filter=web build",
+    "start": "pnpm --filter=web start",
+    "lint": "pnpm --filter=web lint",
+    "db:migrate": "pnpm --filter=web prisma migrate dev",
+    "db:push": "pnpm --filter=web prisma db push",
+    "db:studio": "pnpm --filter=web prisma studio",
+    "db:seed": "pnpm --filter=web prisma db seed",
+    "create:tenant": "node scripts/create-tenant.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.0.0"
+}
