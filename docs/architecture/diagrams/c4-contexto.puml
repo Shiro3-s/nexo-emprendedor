@@ -1,0 +1,26 @@
+@startuml c4-contexto
+' Nexo Emprendedor — Diagrama C4 Nivel 1 (Contexto del Sistema)
+' ADRs relacionados: 0001, 0002, 0003
+' Fuente canónica en texto plano (Diagram-as-Code). Ver docs/architecture/README.md
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Nexo Emprendedor — Diagrama de Contexto (C4 Nivel 1)
+
+Person(emprendedor, "Emprendedor", "Usuario final. Acceso progresivo por validación en etapas.")
+Person(asesor, "Asesor", "Profesional que acompaña a los emprendimientos asignados.")
+Person(admin, "Administrador", "Gestiona usuarios, validaciones y configuración del tenant.")
+
+System(nexo, "Nexo Emprendedor", "Plataforma SaaS multi-tenant de gestión de emprendimientos.\nNext.js (App Router) + PostgreSQL (aislamiento por schema).")
+
+System_Ext(azure, "Microsoft Entra ID", "Identidad institucional corporativa (Azure AD). Proveedor SSO por OIDC.")
+System_Ext(resend, "Resend", "Servicio de correo transaccional para notificaciones.")
+System_Ext(storage, "Uploadthing / S3", "Almacenamiento de cartas de compromiso firmadas.")
+
+Rel(emprendedor, nexo, "Completa perfil, diagnóstico y sube carta", "HTTPS")
+Rel(asesor, nexo, "Gestiona asesorías y seguimiento", "HTTPS")
+Rel(admin, nexo, "Valida usuarios y configura el tenant", "HTTPS")
+Rel(nexo, azure, "Autentica usuarios institucionales", "OIDC / HTTPS")
+Rel(nexo, resend, "Envía notificaciones por email", "API / HTTPS")
+Rel(nexo, storage, "Almacena y recupera documentos", "API / HTTPS")
+
+@enduml

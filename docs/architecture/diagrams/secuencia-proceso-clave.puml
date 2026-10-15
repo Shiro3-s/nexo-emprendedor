@@ -1,0 +1,74 @@
+@startuml secuencia-proceso-clave
+' Nexo Emprendedor — Diagrama de Secuencia de la transacción principal:
+' Onboarding y validación progresiva del emprendedor.
+' ADRs relacionados: 0001, 0002, 0003
+' Fuente canónica en texto plano (Diagram-as-Code). Ver docs/architecture/README.md
+title Proceso clave — Onboarding y validación progresiva del emprendedor
+autonumber
+
+actor Emprendedor as E
+participant "Next.js App\n(Middleware + API Routes)" as APP
+participant "NextAuth v5\n(Azure AD)" as NA
+database "PostgreSQL\n(schema del tenant)" as DB
+participant "Almacenamiento\n(Uploadthing / S3)" as OBJ
+participant "Notificaciones\n(Resend)" as NOT
+actor Administrador as ADM
+
+== 1. Autenticación (SSO institucional) ==
+E -> APP: GET uniminuto.nexoemprendedor.com
+APP -> APP: Middleware extrae subdominio -> tenant
+E -> APP: Iniciar sesión con Microsoft
+APP -> NA: signIn('azure-ad')
+NA -> NA: OIDC contra Microsoft Entra ID
+NA -> DB: Consulta tenant + usuario por email
+alt Dominio no coincide con el tenant
+    NA --> E: Acceso denegado
+else Primer inicio de sesión
+    NA -> DB: Crea usuario (validationStage = PENDING_PROFILE)
+end
+NA --> APP: Sesión JWT (id, role = EMPRENDEDOR)
+
+== 2. Completar perfil ==
+E -> APP: PUT /api/emprendedor/profile
+APP -> DB: Actualiza perfil + stage = PROFILE_COMPLETED
+APP -> DB: ValidationLog (PENDING_PROFILE -> PROFILE_COMPLETED)
+APP -> NOT: "Perfil completado"
+NOT --> ADM: Notificación en dashboard
+
+== 3. Asesoría de bienvenida y habilitación ==
+ADM -> APP: Agenda asesoría + habilita diagnóstico
+APP -> DB: stage = DIAGNOSTICS_ACCESS + AuditLog(APPROVE)
+APP -> NOT: "Acceso a diagnóstico habilitado"
+NOT --> E: Notificación
+
+== 4. Diagnóstico ==
+E -> APP: Responde y envía diagnóstico
+APP -> DB: DiagnosticResponse[] + stage = DIAGNOSTICS_DONE
+APP -> NOT: "Diagnóstico enviado"
+NOT --> ADM: Notificación
+
+== 5. Verificación del diagnóstico ==
+ADM -> APP: POST /api/admin/validate/approve-diagnostic
+alt Aprobado
+    APP -> DB: stage = LETTER_ACCESS
+else Rechazado (con comentario)
+    APP -> DB: stage = DIAGNOSTICS_ACCESS
+end
+APP -> NOT: Notificación de resultado
+NOT --> E: Notificación
+
+== 6. Carta de compromiso ==
+E -> APP: GET /commitment-letter/download (PDF)
+E -> APP: POST /commitment-letter/upload (firmada)
+APP -> OBJ: Guarda documento
+APP -> DB: commitmentLetter = URL + stage = LETTER_UPLOADED
+APP -> NOT: "Carta de compromiso subida"
+NOT --> ADM: Notificación
+
+== 7. Validación completa ==
+ADM -> APP: POST /api/admin/validate/approve-letter
+APP -> DB: stage = FULLY_VALIDATED + AuditLog(APPROVE)
+APP -> NOT: "Validación completa"
+NOT --> E: Acceso total a módulos
+
+@enduml
