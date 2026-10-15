@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Informe de Arquitectura — Nexo Emprendedor</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1f2937; font-size: 11pt; line-height: 1.5; margin: 0; }
+  h1 { font-size: 22pt; color: #0c4a6e; margin: 0 0 4px; }
+  h2 { font-size: 14pt; color: #0057a4; border-bottom: 2px solid #ffc400; padding-bottom: 4px; margin-top: 26px; }
+  h3 { font-size: 12pt; color: #0c4a6e; margin-bottom: 4px; }
+  .cover { text-align: center; padding: 40px 0 20px; border-bottom: 3px solid #0057a4; margin-bottom: 20px; }
+  .cover .sub { color: #4b5563; font-size: 12pt; }
+  .cover .meta { margin-top: 10px; font-size: 10pt; color: #6b7280; }
+  .slogan { font-style: italic; color: #0057a4; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 10pt; }
+  th, td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #0c4a6e; color: #fff; }
+  tr:nth-child(even) td { background: #f3f4f6; }
+  a { color: #0057a4; text-decoration: none; word-break: break-word; }
+  code { background: #f3f4f6; padding: 1px 5px; border-radius: 3px; font-family: "JetBrains Mono", Consolas, monospace; font-size: 9.5pt; }
+  .diagram { text-align: center; margin: 14px 0; page-break-inside: avoid; }
+  .diagram img { max-width: 100%; border: 1px solid #e5e7eb; border-radius: 6px; }
+  .cap { font-size: 9pt; color: #6b7280; margin-top: 6px; }
+  .badge { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 9pt; font-weight: 600; }
+  .aceptado { background: #dcfce7; color: #166534; }
+  .propuesto { background: #fef9c3; color: #854d0e; }
+  ul { margin: 6px 0 6px 18px; padding: 0; }
+  li { margin: 3px 0; }
+  .pagebreak { page-break-before: always; }
+  .note { background: #eff6ff; border-left: 4px solid #0057a4; padding: 8px 12px; margin: 10px 0; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Nexo Emprendedor</h1>
+  <div class="sub">Informe de Arquitectura — Documentación Viva</div>
+  <div class="slogan">"Conectando emprendedores con el conocimiento que necesitan para crecer."</div>
+  <div class="meta">
+    Proyecto Integrador · Entregable: ADRs + Diagramas PlantUML<br>
+    Repositorio: <code>docs/architecture/</code> · Fecha: 14 de octubre de 2026
+  </div>
+</div>
+
+<h2>1. Objetivo</h2>
+<p>
+Formalizar el ecosistema de <strong>documentación viva</strong> del repositorio oficial de Nexo Emprendedor mediante
+<strong>Architecture Decision Records (ADRs)</strong> y <strong>diagramas como código</strong> en <strong>PlantUML</strong>,
+garantizando trazabilidad entre <em>necesidad → decisión → diseño</em>, control de versiones en Git y una base sólida
+para el onboarding de desarrolladores y asistentes de IA.
+</p>
+
+<h2>2. Enlaces a los archivos generados</h2>
+
+<h3>Documentos Markdown (ADRs e índice)</h3>
+<table>
+  <tr><th>Recurso</th><th>Ruta en el repositorio</th></tr>
+  <tr><td>Índice y visión global de vistas</td><td><a href="README.md">docs/architecture/README.md</a></td></tr>
+  <tr><td>ADR-0001 — Patrón arquitectónico (Monolito Modular)</td><td><a href="adr/0001-patron-arquitectonico.md">docs/architecture/adr/0001-patron-arquitectonico.md</a></td></tr>
+  <tr><td>ADR-0002 — Sistema de persistencia (PostgreSQL por schema)</td><td><a href="adr/0002-sistema-de-persistencia.md">docs/architecture/adr/0002-sistema-de-persistencia.md</a></td></tr>
+  <tr><td>ADR-0003 — Estrategia de seguridad (NextAuth + Azure AD)</td><td><a href="adr/0003-estrategia-seguridad.md">docs/architecture/adr/0003-estrategia-seguridad.md</a></td></tr>
+</table>
+
+<h3>Diagramas PlantUML (código fuente)</h3>
+<table>
+  <tr><th>Diagrama</th><th>Fuente <code>.puml</code></th><th>Render</th></tr>
+  <tr><td>C4 Nivel 1 — Contexto del sistema</td><td><a href="diagrams/c4-contexto.puml">diagrams/c4-contexto.puml</a></td><td><a href="diagrams/c4-contexto.png">c4-contexto.png</a></td></tr>
+  <tr><td>Secuencia — Proceso clave (onboarding)</td><td><a href="diagrams/secuencia-proceso-clave.puml">diagrams/secuencia-proceso-clave.puml</a></td><td><a href="diagrams/secuencia-proceso-clave.png">secuencia-proceso-clave.png</a></td></tr>
+</table>
+
+<h2>3. Resumen de las decisiones</h2>
+<table>
+  <tr><th>ID</th><th>Decisión</th><th>Estado</th></tr>
+  <tr>
+    <td>ADR-0001</td>
+    <td>Patrón arquitectónico: <strong>Monolito Modular</strong> (Next.js App Router + Turborepo)</td>
+    <td><span class="badge aceptado">Aceptado</span></td>
+  </tr>
+  <tr>
+    <td>ADR-0002</td>
+    <td>Sistema de persistencia: <strong>PostgreSQL 16 multi-tenant por schema</strong> + Prisma</td>
+    <td><span class="badge aceptado">Aceptado</span></td>
+  </tr>
+  <tr>
+    <td>ADR-0003</td>
+    <td>Estrategia de seguridad: <strong>NextAuth v5 + Azure AD + RBAC por etapas</strong></td>
+    <td><span class="badge propuesto">Propuesto</span></td>
+  </tr>
+</table>
+<p class="note">Se cumple el criterio de evolución de ADRs: tres ADRs interconectados, con al menos uno en estado <strong>Aceptado</strong> (0001, 0002) y otro en estado <strong>Propuesto</strong> (0003).</p>
+
+<div class="pagebreak"></div>
+<h2>4. Diagrama C4 Nivel 1 — Contexto del Sistema</h2>
+<div class="diagram">
+  <img src="diagrams/c4-contexto.png" alt="Diagrama C4 de contexto">
+  <div class="cap">Figura 1. Contexto del sistema: actores y sistemas externos. Fuente: <code>diagrams/c4-contexto.puml</code>.</div>
+</div>
+
+<div class="pagebreak"></div>
+<h2>5. Diagrama de Secuencia — Proceso Clave</h2>
+<div class="diagram">
+  <img src="diagrams/secuencia-proceso-clave.png" alt="Diagrama de secuencia del proceso clave">
+  <div class="cap">Figura 2. Transacción principal: onboarding y validación progresiva del emprendedor. Fuente: <code>diagrams/secuencia-proceso-clave.puml</code>.</div>
+</div>
+
+<div class="pagebreak"></div>
+<h2>6. Matriz de trazabilidad (Necesidad → Decisión → Diseño)</h2>
+<table>
+  <tr><th>Necesidad</th><th>Decisión (ADR)</th><th>Diseño (Diagrama)</th></tr>
+  <tr><td>Un único código base para múltiples instituciones.</td><td>ADR-0001</td><td>C4 Contexto</td></tr>
+  <tr><td>Aislamiento total de datos sensibles por institución.</td><td>ADR-0002</td><td>C4 Contexto · Secuencia</td></tr>
+  <tr><td>Identidad institucional (SSO) y acceso progresivo por etapas.</td><td>ADR-0003</td><td>Secuencia</td></tr>
+  <tr><td>Trazabilidad y auditoría de cada transición de estado.</td><td>ADR-0003</td><td>Secuencia</td></tr>
+</table>
+
+<h2>7. Sustentación técnica</h2>
+<h3>Mitigación de la deuda técnica</h3>
+<ul>
+  <li><strong>Decisiones versionadas y reversibles:</strong> cada decisión es un ADR con estado; cambiar de rumbo es editar un archivo, no depender de la memoria del equipo.</li>
+  <li><strong>Trade-offs explícitos:</strong> los ADRs documentan alternativas descartadas y consecuencias negativas, evitando revivir discusiones.</li>
+  <li><strong>Diagramas como código:</strong> los <code>.puml</code> se diferencian en los <em>pull requests</em>, permitiendo revisar cambios de arquitectura como cambios de código.</li>
+  <li><strong>Trazabilidad:</strong> la matriz de la sección 6 obliga a justificar cada elemento de diseño con una necesidad y una decisión.</li>
+</ul>
+<h3>Onboarding de desarrolladores y asistentes de IA</h3>
+<ul>
+  <li><strong>Punto de entrada único:</strong> el <code>README.md</code> de arquitectura ofrece la visión global en minutos.</li>
+  <li><strong>Contexto para IA:</strong> al ser texto plano, los ADRs y los <code>.puml</code> son indexables y consultables directamente (sin OCR).</li>
+  <li><strong>Orden de lectura claro:</strong> README → ADR (el <em>porqué</em>) → diagrama (el <em>cómo</em>).</li>
+</ul>
+
+<h2>8. Reproducibilidad</h2>
+<p>Los diagramas se regeneran desde su fuente en texto plano:</p>
+<p><code>java -jar plantuml.jar -tpng -charset UTF-8 docs/architecture/diagrams/*.puml</code></p>
+
+<p style="margin-top:30px; font-size:9pt; color:#6b7280; text-align:center;">
+  Nexo Emprendedor — Documentación de Arquitectura viva · Generado el 14 de octubre de 2026
+</p>
+
+</body>
+</html>

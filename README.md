@@ -54,6 +54,7 @@ nexo-emprendedor/
 | [10-EXPORTACION.md](docs/10-EXPORTACION.md) | Exportación CSV/PDF y carga masiva |
 | [11-DESPLIEGUE.md](docs/11-DESPLIEGUE.md) | Despliegue con Docker |
 | [12-PERSONALIZACION.md](docs/12-PERSONALIZACION.md) | Personalización por empresa |
+| [docs/architecture/](docs/architecture/README.md) | Documentación viva: ADRs y diagramas PlantUML (C4 + secuencia) |
 
 ## Inicio Rápido
 
